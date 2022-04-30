@@ -27,14 +27,14 @@ namespace PlatformService.Data
                         },
                         new Platform()
                         {
-                            Name = "Python",
-                            Publisher = "Facebook",
+                            Name = "Sql Server Express",
+                            Publisher = "Microsoft",
                             Cost = "Free"
                         },
                         new Platform()
                         {
-                            Name = "JAVA",
-                            Publisher = "Oracle",
+                            Name = "Kubernetes",
+                            Publisher = "Cloud native computing foundation",
                             Cost = "Free"
                         }
                     );
