@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using PlatformService.Data;
 using PlatformService.Dtos;
 using PlatformService.Model;
+using PlatformService.SyncDataServices.Http;
 
 namespace PlatformService.Controllers
 {
@@ -12,11 +13,17 @@ namespace PlatformService.Controllers
     {
         private readonly IPlatformRepo repository;
         private readonly IMapper mapper;
+        private readonly ICommandDataClient commandDataClient;
 
-        public PlatformsController(IPlatformRepo repository, IMapper mapper)
+        public PlatformsController(
+            IPlatformRepo repository, 
+            IMapper mapper,
+            ICommandDataClient commandDataClient 
+            )
         {
             this.repository = repository;
             this.mapper = mapper;
+            this.commandDataClient = commandDataClient;
         }
 
         //GET /api/platform
@@ -27,7 +34,6 @@ namespace PlatformService.Controllers
             var platformItem = repository.GetAllPlatforms();
 
             //mapping object of platform model to PlatformReadDto
-
             return Ok(mapper.Map<IEnumerable<PlatformReadDto>>(platformItem));
         }
 
@@ -48,7 +54,7 @@ namespace PlatformService.Controllers
 
         //GET /api/platform/id
         [HttpPost]
-        public ActionResult<PlatformReadDto> CreatPlatform(PlatformCreateDto platformCreateDto)
+        public async Task<ActionResult<PlatformReadDto>> CreatPlatform(PlatformCreateDto platformCreateDto)
         {
             //mapping object of PlatformCreatDto to platform model
             var platformModel = mapper.Map<Platform>(platformCreateDto);
@@ -58,6 +64,14 @@ namespace PlatformService.Controllers
             //mapping object of platform model to PlatformReadDto
             var platformReadDto = mapper.Map<PlatformReadDto>(platformModel);
 
+                try
+                {
+                    await commandDataClient.SendPlatformToCommand(platformReadDto);
+                }
+                catch(Exception ex)
+                {
+                    Console.WriteLine($"--> could not send synchronously: {ex.Message}");
+                }
             //CreatedAtRoute returns http 201 with route as part of the return
             return CreatedAtRoute(nameof(GetPlatformById), new { Id = platformReadDto.Id }, platformReadDto);
         }
